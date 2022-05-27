@@ -81,7 +81,7 @@ pub fn create2ddoc(message: String) {
     }
 
     image.save("2D-DOC.png").unwrap();
-    let post_url1 = "../website/MesDocuments";
+    let post_url1 = "../website/certif";
     let post_url = "../docmanagement/miniopush";
     let mut post_map = HashMap::new();
     post_map.insert("pdf", convert_file());
