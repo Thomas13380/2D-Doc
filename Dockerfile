@@ -7,8 +7,6 @@ RUN cargo build --release
 EXPOSE 4000
 
 FROM gcr.io/distroless/cc-debian11
-
 COPY --from=builder /usr/src/2ddoc/target/release/smart2ddoc /usr/src/2ddoc
-WORKDIR /usr/src/2ddoc
-
-CMD ["./smart2ddoc"]
+EXPOSE 4000
+CMD ["./usr/src/2ddoc/smart2ddoc"]

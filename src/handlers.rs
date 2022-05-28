@@ -8,8 +8,6 @@ use p256::ecdsa::{signature::Signer, SigningKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::Read;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputUser {
     pub last_name: String,
@@ -34,7 +32,7 @@ pub async fn create_2ddoc(item: web::Json<InputUser>) -> impl Responder {
     let diploma_degree = &item.diploma_degree;
     let diploma_type = &item.diploma_type;
     let genre = &item.genre;
-    let entete = "DC04FR000001111E1FC5B001FR";
+    let entete = "DC04FR0000011FF41FF4B001FR";
     let mut message = createdata(
         entete,
         last_name,
@@ -79,12 +77,12 @@ pub fn create2ddoc(message: String) {
             }
         }
     }
-
+    let image2=image.as_raw();
     image.save("2D-DOC.png").unwrap();
     let post_url1 = "../website/certif";
     let post_url = "../docmanagement/miniopush";
     let mut post_map = HashMap::new();
-    post_map.insert("pdf", convert_file());
+    post_map.insert("pdf", image2);
     let client = reqwest::Client::new();
     let resp = client.post(post_url).json(&post_map).send();
     let resp2 = client.post(post_url1).json(&post_map).send();
@@ -172,9 +170,9 @@ pub fn p256(message: &str) -> String {
     return format!("{:?}", sign);
 }
 
-pub fn convert_file() -> Vec<u8> {
+/*pub fn convert_file() -> Vec<u8> {
     // path
-    let file_path = "/usr/src/2ddoc/2D-DOC.png";
+    let file_path = "/home/thomas/Documents/2ddoc/2D-DOC.png";
     //let file_name = "joker.png";
     //let file_name: String = String::from(file);
     //file_path.push(file_name);
@@ -188,4 +186,4 @@ pub fn convert_file() -> Vec<u8> {
     file.read_to_end(&mut contents).unwrap();
     println!("file convert to vec of byte");
     return contents;
-}
+}*/
