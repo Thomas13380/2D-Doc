@@ -7,7 +7,15 @@ use image::{GrayImage, Luma};
 use p256::ecdsa::{signature::Signer, SigningKey};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
+use reqwest::blocking::Client;
+use std::fs::File;
+use std::string::String;
+use std::io::Read;
+use std::io::Write;
+
+
+use tokio_util::codec::{BytesCodec, FramedRead};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct InputUser {
     pub last_name: String,
@@ -21,6 +29,11 @@ pub struct InputUser {
     pub diploma_speciality: String,
     pub diploma_type: String,
 }
+pub async fn test() -> impl Responder {
+	format!("2D-Doc crée")
+}
+
+
 
 pub async fn create_2ddoc(item: web::Json<InputUser>) -> impl Responder {
     let first_name = &item.first_name;
@@ -49,8 +62,14 @@ pub async fn create_2ddoc(item: web::Json<InputUser>) -> impl Responder {
     let hash = sha2(&message);
     let sign = p256(&hash);
     message = message + "<US>" + &sign[1..sign.len() - 1];
+    println!("message  :{}",message);
     create2ddoc(message);
-    format!("2D-Doc crée")
+    let image2=convert_file();
+    let mut image3 = unsafe {
+    String::from_utf8_unchecked(image2)
+};
+    rebuild_file(image3.as_bytes().to_vec());
+    format!("{}",image3)
 }
 
 pub fn create2ddoc(message: String) {
@@ -77,17 +96,11 @@ pub fn create2ddoc(message: String) {
             }
         }
     }
-    let image2=image.as_raw();
-    image.save("2D-DOC.png").unwrap();
-    let post_url1 = "../website/certif";
-    let post_url = "../docmanagement/miniopush";
-    let mut post_map = HashMap::new();
-    post_map.insert("pdf", image2);
-    let client = reqwest::Client::new();
-    let resp = client.post(post_url).json(&post_map).send();
-    let resp2 = client.post(post_url1).json(&post_map).send();
-    println!("test");
+    
+    image.save("2DDOC.png").unwrap();
+    
 }
+
 
 pub fn createdata(
     entete: &str,
@@ -167,23 +180,25 @@ pub fn p256(message: &str) -> String {
         signature.as_ref(),
     );
     let sign = &signb32[..signb32.len() - 1];
+    
     return format!("{:?}", sign);
 }
-
-/*pub fn convert_file() -> Vec<u8> {
+pub fn rebuild_file(data: Vec<u8>) {
     // path
-    let file_path = "/home/thomas/Documents/2ddoc/2D-DOC.png";
-    //let file_name = "joker.png";
-    //let file_name: String = String::from(file);
-    //file_path.push(file_name);
-    //let complete_path = concat!(file_path,file_name);
+    let mut path = "/home/thomas/Documents/2ddoc/test.png";
+    let file_name = "test.png";
+    // create empty file
+    let mut new_file = File::create(path).unwrap();
+    // put and write data (vec of byte) in file
+    new_file.write(&data).unwrap();
+    println!("this file: {:?}", new_file);
+}
+pub fn convert_file() -> Vec<u8> {
+    let file_path = "/home/thomas/Documents/2ddoc/2DDOC.png";
     println!("path = {}", file_path);
-    //let complete_path = file_path.join(file_name);
-    // open file
     let mut file = File::open(file_path).unwrap();
     let mut contents: Vec<u8> = vec![];
-    //read all bytes and placing in buffer
     file.read_to_end(&mut contents).unwrap();
     println!("file convert to vec of byte");
     return contents;
-}*/
+}
